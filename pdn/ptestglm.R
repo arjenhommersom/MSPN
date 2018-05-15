@@ -11,7 +11,7 @@ library(igraph)
 library(digest)
 library(energy)
 library(dummies)
-registerDoMC(detectCores()-1)
+registerDoMC(max(1,detectCores()-1))
 
 options(warn = -1)
 #data<- read.csv("~/Dropbox/pspn/spyn/bin/experiments/graphlets/wl/3enzymes.build_wl_corpus.csv", comment.char="#")
