@@ -23,7 +23,7 @@ from mlutils.statistics import gaussianpdf, nplogpoissonpmf, \
     nplogbernoullipmf_fast
 from mlutils.statistics import logbernoullipmf_fast, bernoullipmf
 from mlutils.statistics import logpoissonpmf, poissonpmf
-from mlutils.statistics import gammapdf, betapdf
+from mlutils.statistics import gammapdf, gammamedian, betapdf
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.distributions as distributions
@@ -1669,7 +1669,7 @@ class GaussianKDENode(KernelDensityEstimatorNode):
 
 class GammaNode(Node):
 
-    families = set(['gamma'])
+    families = set(['Gamma'])
 
     def __init__(self, name, featureIdx, featureName, concentration, rate):
         Node.__init__(self)
@@ -1763,10 +1763,33 @@ class GammaNode(Node):
         #                              a=self.concentration,
         #                              scale=self.scale)
         vals = gammapdf(data[:, self.featureIdx],
-                        concentration=self.concetration,
+                        concentration=self.concentration,
                         rate=self.rate)
 
         return np.log(vals)
+
+    def mpe_eval(self, data):
+        obs = data[:, self.featureIdx]
+
+        query_ids = np.isnan(obs)
+
+        mpe_res = np.zeros(data.shape)
+        mpe_res[:] = np.nan
+        mpe_log_probs = np.zeros(obs.shape)
+        mpe_log_probs[:] = LOG_ZERO
+
+        _data = obs
+        _data[query_ids] = gammamedian(self.concentration,self.scale)
+
+        mpe_log_probs[query_ids] = np.log(self.eval(data[query_ids]))
+        mpe_res[query_ids, self.featureIdx] = _data[query_ids]
+
+        mpe_log_probs[~query_ids] = self.eval(data[~query_ids])
+        mpe_res[~query_ids, self.featureIdx] = obs[~query_ids]
+
+        assert np.isnan(mpe_res[:, self.featureIdx]).sum() == 0
+
+        return mpe_log_probs, mpe_res
 
     def __repr__(self):
         return "%s %s\n" % (self.name, self.label)

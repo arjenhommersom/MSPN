@@ -28,7 +28,7 @@ from tfspn.piecewise import piecewise_linear_approximation, estimate_bins, \
     estimate_domains, estimate_domains_range, compute_histogram
 from tfspn.rdc import getIndependentGDTGroups_py
 from tfspn.rdc import getIndependentRDCGroups_py, rdc_transformer
-from tfspn.tfspn import SumNode, ProductNode, PoissonNode, GaussianNode, BernoulliNode
+from tfspn.tfspn import SumNode, ProductNode, PoissonNode, GammaNode, GaussianNode, BernoulliNode
 from tfspn.tfspn import CategoricalNode
 from tfspn.tfspn import PiecewiseLinearPDFNodeOld, PiecewiseLinearPDFNode, IsotonicUnimodalPDFNode, HistNode, KernelDensityEstimatorNode
 from tfspn.piecewise import compute_histogram_type_wise
@@ -497,7 +497,7 @@ class Splitting():
             alpha = config["alpha"]
 
             def clusteringFunctionIndependenceTest(data_slice):
-                allowedFamilies = ["poisson", "gaussian", "bernoulli", "categorical", "baseline"]
+                allowedFamilies = ["poisson", "Gamma", "gaussian", "bernoulli", "categorical", "baseline"]
                 for fam in data_slice.families:
                     assert fam in allowedFamilies, "invalid family " + fam
 
@@ -910,6 +910,9 @@ class SPN(object):
                 elif data_slice.family in GaussianNode.families:
                     data_slice.nodeType = GaussianNode
 
+                elif data_slice.family in GammaNode.families:
+                    data_slice.nodeType = GammaNode
+
                 elif data_slice.family in BernoulliNode.families:
                     data_slice.nodeType = BernoulliNode
 
@@ -1157,6 +1160,10 @@ class SPN(object):
         elif data_slice.nodeType == PoissonNode:
             node = PoissonNode("PoissonNode_" + str(self.getNextId()),
                                data_slice.featureIdx, data_slice.featureName, data_slice.getMean())
+
+        elif data_slice.nodeType == GammaNode:
+            node = GammaNode("GammaNode_" + str(self.getNextId()), data_slice.featureIdx,
+                                data_slice.featureName, data_slice.getMean(), data_slice.getStdev())
 
         elif data_slice.nodeType == GaussianNode:
             node = GaussianNode("GaussianNode_" + str(self.getNextId()), data_slice.featureIdx,

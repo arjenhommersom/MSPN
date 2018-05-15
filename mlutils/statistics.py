@@ -137,11 +137,14 @@ def squared_error(test, predictions):
     return numpy.sum(numpy.power(test - predictions, 2)) / (test.shape[0] * test.shape[1])
 
 
-@jit(nopython=True, nogil=True)
+@jit(nogil=True)
 def gammapdf(x, concentration, rate):
     scale = 1 / rate
     return gamma.pdf(x, a=concentration, scale=scale)
 
+@jit(nogil=True)
+def gammamedian(concentration, scale):
+    return gamma.median(a=concentration, scale=scale)
 
 @jit(nopython=True, nogil=True)
 def betapdf(x, alpha, beta):
