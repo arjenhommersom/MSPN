@@ -1418,12 +1418,22 @@ class HistNode(Node):
         for i, x in enumerate(data):
             outsideLeft = bisect.bisect(self.breaks, x) == 0
             outsideRight = bisect.bisect_left(self.breaks, x) == len(self.breaks)
+            #if(len(self.densities) < 3):
+            #    print('densities', self.densities)
+            #    print('breaks', self.breaks)
+            #    print('x', x)
+            #    print('bisect', bisect.bisect(self.breaks, x))
+            #    print('bisect.left', bisect.bisect_left(self.breaks, x))
+
             outside = outsideLeft or outsideRight
 
             if outside:
                 continue
 
-            density = self.densities[bisect.bisect(self.breaks, x) - 1]
+            if x == self.breaks[-1]:
+                density = self.densities[-1]
+            else:
+                density = self.densities[bisect.bisect(self.breaks,x)-1]
 
             probs[i] += (1.0 - self.prior_weight) * density
 
